@@ -94,12 +94,9 @@ def parse_data(game):
     r_id = requests.get("""{}search/catalog/events/v3?"""
                         """name={}&date={}""".format(API, query, game['Date']),
                         headers=headers)
-    try:
-        if bs(r_id.text, parser).h1.text == 'Access Denied':
-            logging.critical('You are not using the US-based IP address!')
-            exit(1)
-    except:
-        pass
+    if bs(r_id.text, parser).h1.text == 'Access Denied':
+        logging.critical('You are not using the US-based IP address!')
+        exit(1)
     try:
         event = json.loads(r_id.text)['events'][0]['id']
         r_inv = requests.get("""{}search/inventory/v2?"""
@@ -108,7 +105,7 @@ def parse_data(game):
         logging.info(game['Home Team'].strip() +
                      ' vs ' + game['Opponent'].strip() + '...OK')
         return(json.loads(r_inv.text))
-    except:
+    except AttributeError:
         logging.critical(game['Home Team'].strip() +
                          ' vs ' + game['Opponent'].strip() + '...FAIL!')
         return({'listing': [{'listingPrice': {'amount': 'N/A'}},
@@ -142,9 +139,8 @@ def filter_prices(filters, listing):
             pure_filters['row'] = [filters['Row Filter']]
     checks = len(pure_filters.keys())
     if checks == 0:
-        tops.append(listing[0]['listingPrice']['amount'])
-        tops.append(listing[1]['listingPrice']['amount'])
-        tops.append(listing[2]['listingPrice']['amount'])
+        for i in range(3):
+            tops.append(listing[i]['listingPrice']['amount'])
         return tops
     try:
         for i in listing:
@@ -158,7 +154,7 @@ def filter_prices(filters, listing):
                 tops.append(i['listingPrice']['amount'])
         if count < 3:
             raise AttributeError
-    except:
+    except AttributeError:
         if len(tops) > 0:
             while len(tops) < 3:
                 tops.append('N/A')
