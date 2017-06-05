@@ -18,7 +18,7 @@ parser = 'html.parser'
 
 
 def get_teams():
-    """Parsing teams list from FBSchedules."""
+    """Parse teams list from FBSchedules."""
     URL = 'http://www.fbschedules.com/'
     r = requests.get('{}ncaa/2017-college-football-schedules.php'.format(URL))
     soup = bs(r.text,
@@ -81,7 +81,7 @@ def fill_sheet():
 
 
 def parse_data(game):
-    """Parsing game data from StubHub API."""
+    """Parse game data from StubHub API."""
     headers = {'Authorization':
                'Bearer f30af7a1-a222-38ec-95f9-be771f4c0ebb',
                'Accept': 'application/json',
@@ -94,9 +94,12 @@ def parse_data(game):
     r_id = requests.get("""{}search/catalog/events/v3?"""
                         """name={}&date={}""".format(API, query, game['Date']),
                         headers=headers)
-    if bs(r_id.text, parser).h1.text == 'Access Denied':
-        logging.critical('You are not using the US-based IP address!')
-        exit(1)
+    try:
+        if bs(r_id.text, parser).h1.text == 'Access Denied':
+            logging.critical('You are not using the US-based IP address!')
+            exit(1)
+    except:
+        pass
     try:
         event = json.loads(r_id.text)['events'][0]['id']
         r_inv = requests.get("""{}search/inventory/v2?"""
@@ -105,7 +108,7 @@ def parse_data(game):
         logging.info(game['Home Team'].strip() +
                      ' vs ' + game['Opponent'].strip() + '...OK')
         return(json.loads(r_inv.text))
-    except AttributeError:
+    except:
         logging.critical(game['Home Team'].strip() +
                          ' vs ' + game['Opponent'].strip() + '...FAIL!')
         return({'listing': [{'listingPrice': {'amount': 'N/A'}},
@@ -114,7 +117,7 @@ def parse_data(game):
 
 
 def filter_prices(filters, listing):
-    """Filtering prices data."""
+    """Filter prices data."""
     tops = []
     pure_filters = {}
     count = 0
@@ -139,14 +142,15 @@ def filter_prices(filters, listing):
             pure_filters['row'] = [filters['Row Filter']]
     checks = len(pure_filters.keys())
     if checks == 0:
-        for i in range(3):
-            tops.append(listing[i]['listingPrice']['amount'])
+        tops.append(listing[0]['listingPrice']['amount'])
+        tops.append(listing[1]['listingPrice']['amount'])
+        tops.append(listing[2]['listingPrice']['amount'])
         return tops
     try:
         for i in listing:
             item_checks = 0
             for key in pure_filters.keys():
-                if True in [chunk in i[key]
+                if True in [chunk in str(i[key])
                             for chunk in pure_filters[key]]:
                     item_checks += 1
             if item_checks == checks:
@@ -154,7 +158,7 @@ def filter_prices(filters, listing):
                 tops.append(i['listingPrice']['amount'])
         if count < 3:
             raise AttributeError
-    except AttributeError:
+    except:
         if len(tops) > 0:
             while len(tops) < 3:
                 tops.append('N/A')
@@ -166,7 +170,7 @@ def filter_prices(filters, listing):
 
 
 def print_menu():
-    """Simple user menu."""
+    """Print user menu."""
     print(30 * "-", "MENU", 30 * "-")
     print("1. Generate input list")
     if not os.path.exists('input.csv'):
