@@ -94,12 +94,9 @@ def parse_data(game):
     r_id = requests.get("""{}search/catalog/events/v3?"""
                         """name={}&date={}""".format(API, query, game['Date']),
                         headers=headers)
-    try:
-        if bs(r_id.text, parser).h1.text == 'Access Denied':
-            logging.critical('You are not using the US-based IP address!')
-            exit(1)
-    except:
-        pass
+    if r_id.status_code == 403:
+        logging.critical('You are not using the US-based IP address!')
+        exit(1)
     try:
         event = json.loads(r_id.text)['events'][0]['id']
         r_inv = requests.get("""{}search/inventory/v2?"""
@@ -108,7 +105,7 @@ def parse_data(game):
         logging.info(game['Home Team'].strip() +
                      ' vs ' + game['Opponent'].strip() + '...OK')
         return(json.loads(r_inv.text))
-    except:
+    except (AttributeError, TypeError):
         logging.critical(game['Home Team'].strip() +
                          ' vs ' + game['Opponent'].strip() + '...FAIL!')
         return({'listing': [{'listingPrice': {'amount': 'N/A'}},
@@ -158,7 +155,7 @@ def filter_prices(filters, listing):
                 tops.append(i['listingPrice']['amount'])
         if count < 3:
             raise AttributeError
-    except:
+    except (AttributeError, TypeError):
         if len(tops) > 0:
             while len(tops) < 3:
                 tops.append('N/A')
