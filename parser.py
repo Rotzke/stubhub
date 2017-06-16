@@ -1,12 +1,12 @@
 #!/usr/bin/python3.5
 """API parser for StubHub."""
-import os
-import sys
 import csv
 import json
 import logging
-from time import sleep
+import os
+import sys
 from datetime import datetime
+from time import sleep
 
 import requests
 from bs4 import BeautifulSoup as bs
@@ -35,13 +35,12 @@ def get_teams():
             game['Home Team'] = i.text
             logging.info(i.text)
             try:
-                for o in bs(requests.get(URL+i['href']).text,
-                            parser).\
-                            find('table',
-                                 {'class':
-                                  'cfb-sch'}).find_all('td',
-                                                       {'class':
-                                                        'cfb2'}):
+                for o in bs(requests.get(URL + i['href']).text, parser).\
+                    find('table',
+                         {'class':
+                          'cfb-sch'}).find_all('td',
+                                               {'class':
+                                                'cfb2'}):
                     if not o.strong.string.lower().startswith(('at', 'off')):
                         game['Opponent'] = o.strong.string.strip()
                         raw_date = o.parent.td.text + str(datetime.now().year)
@@ -109,8 +108,8 @@ def parse_data(game):
         logging.critical(game['Home Team'].strip() +
                          ' vs ' + game['Opponent'].strip() + '...FAIL!')
         return({'listing': [{'listingPrice': {'amount': 'N/A'}},
-                {'listingPrice': {'amount': 'N/A'}},
-                {'listingPrice': {'amount': 'N/A'}}]})
+                            {'listingPrice': {'amount': 'N/A'}},
+                            {'listingPrice': {'amount': 'N/A'}}]})
 
 
 def filter_prices(filters, listing):
@@ -161,8 +160,8 @@ def filter_prices(filters, listing):
                 tops.append('N/A')
             return tops
         return({'listing': [{'listingPrice': {'amount': 'N/A'}},
-                {'listingPrice': {'amount': 'N/A'}},
-                {'listingPrice': {'amount': 'N/A'}}]})
+                            {'listingPrice': {'amount': 'N/A'}},
+                            {'listingPrice': {'amount': 'N/A'}}]})
     return tops
 
 
