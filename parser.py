@@ -81,8 +81,7 @@ def fill_sheet():
 
 def parse_data(game):
     """Parse game data from StubHub API."""
-    headers = {'Authorization':
-               'Bearer f30af7a1-a222-38ec-95f9-be771f4c0ebb',
+    headers = {'Authorization': 'Bearer',
                'Accept': 'application/json',
                'Accept-Encoding': 'application/json'
                }
